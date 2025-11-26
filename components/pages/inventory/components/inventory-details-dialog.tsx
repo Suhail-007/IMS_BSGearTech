@@ -1,12 +1,5 @@
 'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
 import {
@@ -15,17 +8,13 @@ import {
   Package,
   Weight,
   Ruler,
-  FileText,
   Calendar,
-  Layers,
-  Clock,
-  CheckCircle,
-  TrendingUp
+  IndianRupee
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
-import { cn } from '@/lib/utils';
+import { EntityDetailsDialog } from '@/components/ui/entity-details-dialog';
 
 interface InventoryDetailsDialogProps {
   open: boolean;
@@ -56,102 +45,35 @@ export function InventoryDetailsDialog({
     }
   };
 
-  const materialInfo = inventory.materialInfo;
-
-  const MATERIAL_STATUS: Record<string, { label: string; className: string }> = {
-    'in-stock': {
-      label: 'In Stock',
-      className: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20'
-    },
-    'low-stock': {
-      label: 'Low Stock',
-      className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20'
-    },
-    'out-of-stock': {
-      label: 'Out of Stock',
-      className: 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20'
-    }
-  };
-
-  const quantityFormatter = new Intl.NumberFormat('en-IN', {
-    maximumFractionDigits: 2
-  });
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            <span>Inventory Item Details</span>
-          </DialogTitle>
-        </DialogHeader>
-
+    <>
+      <EntityDetailsDialog
+        open={open}
+        onClose={() => onOpenChange(false)}
+        isOperating={isDeleting}
+        header={{
+          title: 'Inventory Item Details',
+          subtitle: 'View and manage inventory information'
+        }}
+        renderFooter={() => (
+          <>
+            <Button variant="outline" onClick={() => onEdit(inventory)} className="gap-2">
+              <Edit className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => setIsConfirmDialogOpen(true)}
+              disabled={isDeleting}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </>
+        )}
+      >
         <div className="space-y-6">
-          {/* Material Summary Section */}
-          {materialInfo && (
-            <div className="bg-gradient-to-br from-blue-50 to-[#bbeaed] dark:from-blue-950/20 dark:to-cyan-950/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    {materialInfo.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Material Type: {materialInfo.material}
-                  </p>
-                </div>
-                <Badge
-                  className={cn('flex-shrink-0', MATERIAL_STATUS[materialInfo.status]?.className)}
-                >
-                  {MATERIAL_STATUS[materialInfo.status]?.label}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <Package className="h-3 w-3" />
-                    <span>Total Stock</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {quantityFormatter.format(materialInfo.stock)} {materialInfo.unit}
-                  </p>
-                </div>
-
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <Clock className="h-3 w-3" />
-                    <span>Pending</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {quantityFormatter.format(materialInfo.pendingDelivery)} {materialInfo.unit}
-                  </p>
-                </div>
-
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <CheckCircle className="h-3 w-3" />
-                    <span>Available</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {quantityFormatter.format(materialInfo.stock - materialInfo.pendingDelivery)}{' '}
-                    {materialInfo.unit}
-                  </p>
-                </div>
-
-                <div className="bg-white/50 dark:bg-gray-800/50 p-3 rounded-md">
-                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    <Layers className="h-3 w-3" />
-                    <span>Profiles</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {materialInfo.profileCount}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Individual Item Details */}
           <div className="border-t pt-4">
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -181,28 +103,40 @@ export function InventoryDetailsDialog({
                 </p>
               </div>
 
-              {/* Cut Size */}
+              {/* Dimensions */}
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
                   <Ruler className="h-4 w-4" />
-                  Cut Size (Width × Height)
+                  Dimensions
                 </h4>
                 <p className="text-lg font-medium text-foreground">
-                  {Number(inventory.cut_size_width).toFixed(2)} ×{' '}
-                  {Number(inventory.cut_size_height).toFixed(2)} mm
+                  {Number(inventory.outer_diameter).toFixed(2)}mm OD ×{' '}
+                  {Number(inventory.length).toFixed(2)}
+                  mm L
                 </p>
               </div>
 
-              {/* PO Number */}
-              {inventory.po_number && (
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    PO Number
-                  </h4>
-                  <p className="text-lg font-medium text-foreground">{inventory.po_number}</p>
-                </div>
-              )}
+              {/* Rate */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  <IndianRupee className="h-4 w-4" />
+                  Rate (per kg)
+                </h4>
+                <p className="text-lg font-medium text-foreground">
+                  ₹{Number(inventory.rate).toFixed(2)}
+                </p>
+              </div>
+
+              {/* Total Cost */}
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  <IndianRupee className="h-4 w-4" />
+                  Total Cost
+                </h4>
+                <p className="text-lg font-medium text-foreground">
+                  ₹{(Number(inventory.rate) * Number(inventory.material_weight)).toFixed(2)}
+                </p>
+              </div>
 
               {/* Timestamps */}
               <div className="pt-4 border-t w-full col-span-2">
@@ -221,31 +155,10 @@ export function InventoryDetailsDialog({
                   </div>
                 </div>
               </div>
-
-              
             </div>
           </div>
         </div>
-        
-      <DialogFooter>
-        <div className="flex justify-end gap-2 pt-4 w-full border-t">
-          <Button variant="outline" onClick={() => onEdit(inventory)} className="gap-2">
-            <Edit className="h-4 w-4" />
-            Edit
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => setIsConfirmDialogOpen(true)}
-            disabled={isDeleting}
-            className="gap-2"
-          >
-            <Trash2 className="h-4 w-4" />
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </div>
-      </DialogFooter>
-      </DialogContent>
-      
+      </EntityDetailsDialog>
 
       <ConfirmationDialog
         open={isConfirmDialogOpen}
@@ -257,6 +170,6 @@ export function InventoryDetailsDialog({
         variant="destructive"
         onConfirm={handleDelete}
       />
-    </Dialog>
+    </>
   );
 }

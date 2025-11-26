@@ -9,16 +9,22 @@ export const CreateInventorySchema = z.object({
   material_weight: z
     .number()
     .positive('Material weight must be positive')
-    .max(9999999.999, 'Material weight is too large'),
-  cut_size_width: z
+    .max(9999999.999, 'Material weight is too large')
+    .optional()
+    .or(z.literal("")),  // Allow empty string in form that will be handled by backend
+  outer_diameter: z
     .number()
-    .positive('Width must be positive')
-    .max(999999.9999, 'Width is too large'),
-  cut_size_height: z
+    .positive('Outer diameter must be positive')
+    .max(999999.9999, 'Outer diameter is too large'),
+  length: z
     .number()
-    .positive('Height must be positive')
-    .max(999999.9999, 'Height is too large'),
-  po_number: z.string().max(100, 'PO number is too long').optional(),
+    .positive('Length must be positive')
+    .max(999999.9999, 'Length is too large'),
+  rate: z
+    .number()
+    .min(0, 'Rate cannot be negative')
+    .max(99999999.99, 'Rate is too large'),
+    total_cost: z.number().min(0).optional()
 });
 
 // Update inventory schema (all fields optional)
@@ -29,17 +35,21 @@ export const UpdateInventorySchema = z.object({
     .positive('Material weight must be positive')
     .max(9999999.999, 'Material weight is too large')
     .optional(),
-  cut_size_width: z
+  outer_diameter: z
     .number()
-    .positive('Width must be positive')
-    .max(999999.9999, 'Width is too large')
+    .positive('Outer diameter must be positive')
+    .max(999999.9999, 'Outer diameter is too large')
     .optional(),
-  cut_size_height: z
+  length: z
     .number()
-    .positive('Height must be positive')
-    .max(999999.9999, 'Height is too large')
+    .positive('Length must be positive')
+    .max(999999.9999, 'Length is too large')
     .optional(),
-  po_number: z.string().max(100, 'PO number is too long').optional(),
+  rate: z
+    .number()
+    .min(0, 'Rate cannot be negative')
+    .max(99999999.99, 'Rate is too large')
+    .optional(),
 });
 
 // Inventory list query schema

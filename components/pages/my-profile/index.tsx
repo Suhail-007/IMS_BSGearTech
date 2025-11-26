@@ -11,10 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { User, Calendar, Edit2, Save, X } from 'lucide-react';
 import { z } from 'zod';
-import { updateProfile } from '@/services/auth';
+import { updateProfile, updatePassword } from '@/services/auth';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { useAuth } from '@/contexts/AuthContext';
 import { UpdateUserSchema } from '@/schemas/user.schema';
+import { UpdatePasswordSchema } from '@/schemas/password.schema';
 
 type ProfileData = z.infer<typeof UpdateUserSchema>;
 
@@ -28,11 +29,18 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const { user, isLoading, updateUser: updateAuthUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<ProfileData>({
     firstName: '',
     lastName: ''
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
   // Update form data when user changes
@@ -47,7 +55,14 @@ export default function ProfilePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Handle password fields separately
+    if (['currentPassword', 'newPassword', 'confirmPassword'].includes(name)) {
+      setPasswordData((prev) => ({ ...prev, [name]: value }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+
     // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => {
@@ -58,13 +73,16 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSaveProfile = async () => {
     setIsSaving(true);
     setErrors({});
 
     try {
-      // Validate form data
-      const validatedData = UpdateUserSchema.parse(formData);
+      // Validate profile data
+      const validatedData = UpdateUserSchema.parse({
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
 
       // Call API to update profile
       const response = await updateProfile(validatedData);
@@ -102,7 +120,51 @@ export default function ProfilePage() {
     }
   };
 
-  const handleCancel = () => {
+  const handleUpdatePassword = async () => {
+    setIsUpdatingPassword(true);
+    setErrors({});
+
+    try {
+      // Validate password data
+      const validatedData = UpdatePasswordSchema.parse(passwordData);
+
+      // Call API to update password
+      await updatePassword(validatedData);
+
+      toast({
+        title: 'Success!',
+        description: 'Password updated successfully',
+        variant: 'success'
+      });
+
+      setIsEditingPassword(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          if (issue.path[0]) {
+            fieldErrors[issue.path[0].toString()] = issue.message;
+          }
+        });
+        setErrors(fieldErrors);
+      } else if (err instanceof Error) {
+        toast({
+          title: 'Error',
+          description: err.message || 'Failed to update password',
+          variant: 'destructive'
+        });
+      }
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const handleCancelProfile = () => {
     if (user) {
       setFormData({
         firstName: user.first_name,
@@ -111,6 +173,16 @@ export default function ProfilePage() {
     }
     setErrors({});
     setIsEditing(false);
+  };
+
+  const handleCancelPassword = () => {
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setErrors({});
+    setIsEditingPassword(false);
   };
 
   const getInitials = () => {
@@ -132,20 +204,18 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
-            My Profile
-          </h1>
+          <h1 className="text-3xl font-bold  mb-2">My Profile</h1>
           <p className="text-muted-foreground">Manage your account information</p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
           {/* Profile Summary Card */}
           <GradientBorderCard className="border shadow-lg bg-white dark:bg-slate-900">
-            <Card className="!border-0 !shadow-none">
+            <Card className="!border-0 h-full !shadow-none">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center">
-                  <Avatar className="h-24 w-24 border-4 border-white shadow-lg mb-4">
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-500 text-white text-2xl">
+                  <Avatar className="h-24 w-24 border-4  border-blue-400 dark:border-blue-400/50e shadow-lg mb-4">
+                    <AvatarFallback className="bg-gradient-to-br  from-blue-600 to-cyan-500 dark:from-blue-600/30 dark:to-cyan-500/30 text-white dark:text-[#efefef]  text-2xl">
                       {getInitials()}
                     </AvatarFallback>
                   </Avatar>
@@ -153,7 +223,7 @@ export default function ProfilePage() {
                     {formData.firstName} {formData.lastName}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">@{user.username}</p>
-                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0">
+                  <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 dark:from-blue-500/30 dark:to-cyan-500/30 px-3 py-2 tracking-wider text-white dark:text-[#efefef] border-0">
                     {roleLabels[user.role]}
                   </Badge>
 
@@ -180,7 +250,7 @@ export default function ProfilePage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 dark:from-blue-600/30 dark:to-cyan-500/30">
                       <User className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -299,7 +369,7 @@ export default function ProfilePage() {
                   {isEditing && (
                     <div className="flex gap-4 pt-4 border-t">
                       <Button
-                        onClick={handleSave}
+                        onClick={handleSaveProfile}
                         disabled={isSaving}
                         className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 gap-2"
                       >
@@ -307,7 +377,7 @@ export default function ProfilePage() {
                         {isSaving ? 'Saving...' : 'Save Changes'}
                       </Button>
                       <Button
-                        onClick={handleCancel}
+                        onClick={handleCancelProfile}
                         disabled={isSaving}
                         variant="outline"
                         className="gap-2"
@@ -317,6 +387,96 @@ export default function ProfilePage() {
                       </Button>
                     </div>
                   )}
+
+                  {/* Password Update Section */}
+                  <div className="pt-4 border-t space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                        Change Password
+                      </h3>
+                      {!isEditingPassword && (
+                        <Button
+                          onClick={() => setIsEditingPassword(true)}
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          Update Password
+                        </Button>
+                      )}
+                    </div>
+
+                    {isEditingPassword && (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="currentPassword">Current Password</Label>
+                          <Input
+                            id="currentPassword"
+                            name="currentPassword"
+                            type="password"
+                            value={passwordData.currentPassword}
+                            onChange={handleChange}
+                            className={errors.currentPassword ? 'border-red-500' : ''}
+                            disabled={isUpdatingPassword}
+                          />
+                          {errors.currentPassword && (
+                            <InlineErrorMessage error={errors.currentPassword} />
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="newPassword">New Password</Label>
+                          <Input
+                            id="newPassword"
+                            name="newPassword"
+                            type="password"
+                            value={passwordData.newPassword}
+                            onChange={handleChange}
+                            className={errors.newPassword ? 'border-red-500' : ''}
+                            disabled={isUpdatingPassword}
+                          />
+                          {errors.newPassword && <InlineErrorMessage error={errors.newPassword} />}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                          <Input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            value={passwordData.confirmPassword}
+                            onChange={handleChange}
+                            className={errors.confirmPassword ? 'border-red-500' : ''}
+                            disabled={isUpdatingPassword}
+                          />
+                          {errors.confirmPassword && (
+                            <InlineErrorMessage error={errors.confirmPassword} />
+                          )}
+                        </div>
+
+                        <div className="flex gap-4">
+                          <Button
+                            onClick={handleUpdatePassword}
+                            disabled={isUpdatingPassword}
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 gap-2"
+                          >
+                            <Save className="h-4 w-4" />
+                            {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                          </Button>
+                          <Button
+                            onClick={handleCancelPassword}
+                            disabled={isUpdatingPassword}
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <X className="h-4 w-4" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Account Info */}
                   <div className="pt-4 border-t space-y-2">

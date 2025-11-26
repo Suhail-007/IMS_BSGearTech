@@ -2,15 +2,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { InventoryRecord } from '@/services/types/inventory.api.type';
-import { fetchInventory, createInventoryItem, updateInventoryItem, deleteInventoryItem } from '@/services/inventory';
+import {
+  fetchInventory,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem
+} from '@/services/inventory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Package, Ruler, FileText, Eye } from 'lucide-react';
+import { Plus, Search, Package, Ruler, Eye, Weight, IndianRupee } from 'lucide-react';
 import { error as errorToast, success as successToast } from '@/hooks/use-toast';
+import { Section } from '@/components/ui/section';
 import { GradientBorderCard } from '@/components/ui/gradient-border-card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { InventoryDetailsDialog } from './inventory-details-dialog';
 import { InventoryFormDialog } from './inventory-form-dialog';
 import { CreateInventoryInput, UpdateInventoryInput } from '@/schemas/inventory.schema';
@@ -24,16 +29,17 @@ export function InventoryTab() {
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingInventory, setEditingInventory] = useState<InventoryRecord | null>(null);
   const [materialFilter, setMaterialFilter] = useState<'all' | 'CR-5' | 'EN-9'>('all');
+  // const [statsKey, setStatsKey] = useState(0);
 
   // Fetch all inventory items
   const loadInventoryItems = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetchInventory({ 
+      const response = await fetchInventory({
         material_type: materialFilter,
         limit: 100,
         page: 1,
-        search: searchQuery,
+        search: searchQuery
       });
 
       if (response.success && response.data) {
@@ -42,13 +48,12 @@ export function InventoryTab() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to load inventory items',
+        description: error.message || 'Failed to load inventory items'
       });
     } finally {
       setIsLoading(false);
     }
   }, [materialFilter, searchQuery]);
-
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -77,7 +82,7 @@ export function InventoryTab() {
       if (response.success) {
         successToast({
           title: 'Success',
-          description: 'Inventory item deleted successfully',
+          description: 'Inventory item deleted successfully'
         });
         setIsDetailsDialogOpen(false);
         loadInventoryItems();
@@ -85,7 +90,7 @@ export function InventoryTab() {
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || 'Failed to delete inventory item',
+        description: error.message || 'Failed to delete inventory item'
       });
     }
   };
@@ -95,11 +100,14 @@ export function InventoryTab() {
     try {
       if (editingInventory) {
         // Update existing inventory item
-        const response = await updateInventoryItem(editingInventory.id, data as UpdateInventoryInput);
+        const response = await updateInventoryItem(
+          editingInventory.id,
+          data as UpdateInventoryInput
+        );
         if (response.success) {
           successToast({
             title: 'Success',
-            description: 'Inventory item updated successfully',
+            description: 'Inventory item updated successfully'
           });
         }
       } else {
@@ -108,27 +116,29 @@ export function InventoryTab() {
         if (response.success) {
           successToast({
             title: 'Success',
-            description: 'Inventory item created successfully',
+            description: 'Inventory item created successfully'
           });
         }
       }
-      
+
       setIsFormDialogOpen(false);
       setEditingInventory(null);
       loadInventoryItems();
+      // setStatsKey((prev) => prev + 1);
     } catch (error: any) {
       errorToast({
         title: 'Error',
-        description: error.message || `Failed to ${editingInventory ? 'update' : 'create'} inventory item`,
+        description:
+          error.message || `Failed to ${editingInventory ? 'update' : 'create'} inventory item`
       });
       throw error; // Re-throw to let form handle the error state
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Filters and Search */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div className="flex flex-1 items-center gap-4">
           <div className="flex gap-2">
             <Button
@@ -156,15 +166,15 @@ export function InventoryTab() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by PO number..."
+              placeholder="Search by outer diameter * length and rate..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
             />
           </div>
         </div>
-        <Button 
-          className="gap-2" 
+        <Button
+          className="gap-2"
           onClick={() => {
             setEditingInventory(null);
             setIsFormDialogOpen(true);
@@ -175,29 +185,46 @@ export function InventoryTab() {
         </Button>
       </div>
 
-      {/* Inventory Items Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-56" />
-          ))}
-        </div>
-      ) : inventoryItems.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">
-            {searchQuery ? `No inventory items found for "${searchQuery}"` : 'No inventory items found'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {inventoryItems.map((item) => (
-            <GradientBorderCard
-              key={item.id}
-              className="hover:shadow-lg transition-all duration-300 cursor-pointer group relative"
-              onClick={() => handleInventoryItemClick(item)}
-            >
-              <div className="p-5 space-y-4">
+      {/* Material Stats Section */}
+      {/* <Section
+        title="Material Overview"
+        description="Inventory statistics by material and dimensions"
+        variant="gradient"
+      >
+        <InventoryStatsCards key={statsKey} />
+      </Section> */}
+
+      {/* Inventory Items Section */}
+      <Section
+        title="Inventory Items"
+        description="Browse and manage inventory records"
+        variant="gradient"
+      >
+        {/* Inventory Items Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-56" />
+            ))}
+          </div>
+        ) : inventoryItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Package className="h-12 w-12 text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">
+              {searchQuery
+                ? `No inventory items found for "${searchQuery}"`
+                : 'No inventory items found'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {inventoryItems.map((item) => (
+              <GradientBorderCard
+                key={item.id}
+                gradient="none"
+                className="hover:shadow-lg p-5 space-y-4 transition-all duration-300 cursor-pointer group relative"
+                onClick={() => handleInventoryItemClick(item)}
+              >
                 {/* Header with Material Type */}
                 <div className="flex items-start justify-between">
                   <Badge variant="outline" className="text-sm font-semibold">
@@ -209,11 +236,11 @@ export function InventoryTab() {
                 <div className="space-y-3">
                   <div className="flex items-start justify-between text-sm">
                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                      <Package className="h-4 w-4" />
+                      <Weight className="h-4 w-4" />
                       <span className="font-medium">Weight</span>
                     </div>
                     <span className="font-semibold text-gray-900 dark:text-gray-100">
-                      {Number(item.material_weight).toFixed(2)} kg
+                      {Number(item.material_weight)?.toFixed(2)} kg
                     </span>
                   </div>
 
@@ -223,21 +250,30 @@ export function InventoryTab() {
                       <span className="font-medium">Dimensions</span>
                     </div>
                     <span className="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                      {Number(item.cut_size_width).toFixed(2)} × {Number(item.cut_size_height).toFixed(2)} mm
+                      {Number(item.outer_diameter).toFixed(2)}mm OD ×{' '}
+                      {Number(item.length).toFixed(2)}mm L
                     </span>
                   </div>
 
-                  {item.po_number && (
-                    <div className="flex items-start justify-between text-sm">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                        <FileText className="h-4 w-4" />
-                        <span className="font-medium">PO Number</span>
-                      </div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
-                        {item.po_number}
-                      </span>
+                  <div className="flex items-start justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <IndianRupee className="h-4 w-4" />
+                      <span className="font-medium">Rate</span>
                     </div>
-                  )}
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      ₹{Number(item.rate).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-start justify-between text-sm">
+                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                      <IndianRupee className="h-4 w-4" />
+                      <span className="font-medium">Total Cost</span>
+                    </div>
+                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      ₹{(Number(item.rate) * Number(item.material_weight)).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
 
                 {/* View Details - Bottom Right */}
@@ -247,11 +283,11 @@ export function InventoryTab() {
                     View Details
                   </span>
                 </div>
-              </div>
-            </GradientBorderCard>
-          ))}
-        </div>
-      )}
+              </GradientBorderCard>
+            ))}
+          </div>
+        )}
+      </Section>
 
       {/* Dialogs */}
       <InventoryDetailsDialog

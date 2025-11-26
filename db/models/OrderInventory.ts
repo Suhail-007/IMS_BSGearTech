@@ -17,11 +17,13 @@ import type Inventory from './Inventory';
 export interface OrderInventoryAttributes {
   id: string;
   order_id: string;
+  order_profile_id?: string;
   inventory_id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
-  cut_size_width: number;
-  cut_size_height: number;
+  outer_diameter: number;
+  length: number;
+  rate: number;
   po_number?: string | null;
   created_at: Date;
   updated_at: Date;
@@ -31,7 +33,7 @@ export interface OrderInventoryAttributes {
 interface OrderInventoryCreationAttributes
   extends Optional<
     OrderInventoryAttributes,
-    'id' | 'po_number' | 'created_at' | 'updated_at'
+    'id' | 'order_profile_id' | 'po_number' | 'created_at' | 'updated_at'
   > {}
 
 // Define the model class
@@ -41,12 +43,13 @@ export class OrderInventory extends Model<
 > {
   declare id: CreationOptional<string>;
   declare order_id: ForeignKey<Orders['id']>;
+  declare order_profile_id?: string;
   declare inventory_id: ForeignKey<Inventory['id']>;
   declare material_type: 'CR-5' | 'EN-9';
   declare material_weight: number;
-  declare cut_size_width: number;
-  declare cut_size_height: number;
-  declare po_number: string | null;
+  declare outer_diameter: number;
+  declare length: number;
+  declare rate: number;
   declare created_at: CreationOptional<Date>;
   declare updated_at: CreationOptional<Date>;
 
@@ -63,6 +66,10 @@ export class OrderInventory extends Model<
     OrderInventory.belongsTo(models.Orders, {
       foreignKey: 'order_id',
       as: 'order',
+    });
+    OrderInventory.belongsTo(models.OrderProfile, {
+      foreignKey: 'order_profile_id',
+      as: 'orderProfile',
     });
     OrderInventory.belongsTo(models.Inventory, {
       foreignKey: 'inventory_id',
@@ -90,6 +97,16 @@ OrderInventory.init(
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
+    order_profile_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'order_profile',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE',
+    },
     inventory_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -110,20 +127,21 @@ OrderInventory.init(
       allowNull: false,
       comment: 'Weight of material in kg'
     },
-    cut_size_width: {
+    outer_diameter: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
-      comment: 'Width dimension in mm'
+      comment: 'Outer diameter in mm'
     },
-    cut_size_height: {
+    length: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
-      comment: 'Height dimension in mm'
+      comment: 'Length in mm'
     },
-    po_number: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      comment: 'Related Purchase Order number'
+    rate: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Rate per unit'
     },
     created_at: {
       type: DataTypes.DATE,

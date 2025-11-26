@@ -1,4 +1,3 @@
-import { AxiosResponse } from 'axios';
 import { BaseResponse } from './base.api.type';
 import { MaterialType } from '../../schemas/inventory.schema';
 
@@ -19,11 +18,12 @@ export interface InventoryRecord {
   id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
-  cut_size_width: number;
-  cut_size_height: number;
-  po_number?: string | null;
+  outer_diameter: number;
+  length: number;
   created_at: string;
   updated_at: string;
+  rate: number;
+  total_cost: number;
   materialInfo?: MaterialInfo; // Added material summary info
 }
 
@@ -50,6 +50,33 @@ export type CreateInventoryResponse = BaseResponse<InventoryRecord>;
 export type UpdateInventoryResponse = BaseResponse<InventoryRecord>;
 
 export type DeleteInventoryResponse = BaseResponse<{ message: string }>;
+
+export type MaterialStats = Record<string, InventoryStats[]>;
+
+export type InventoryStatsResponse = BaseResponse<{
+  stats: MaterialStats;
+}>;
+
+export interface InventoryStats {
+  dimensions: {
+    outer_diameter: number;
+    length: number;
+  };
+  total: {
+    weight: number;
+    quantity: number;
+  };
+  pending: {
+    weight: number;
+    quantity: number;
+  };
+  available: {
+    weight: number;
+    quantity: number;
+  };
+  unit: string;
+  status: 'in-stock' | 'low-stock' | 'out-of-stock';
+}
 
 // Material summary structure (same as dashboard but from inventory endpoint)
 export interface InventoryMaterial {

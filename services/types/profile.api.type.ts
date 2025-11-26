@@ -1,19 +1,9 @@
-import { MATERIALS, PROFILE_TYPES } from '../../enums/material.enum';
+import { OrderProfilesRecord } from '@/schemas/create-order.schema';
 import { BaseResponse } from './base.api.type';
 
 // Profile record structure matching DB model
-export interface ProfileRecord {
-  id: string;
-  name: string;
-  type: PROFILE_TYPES;
-  material: MATERIALS;
-  material_rate: string;
-  cut_size_width_mm: string;
-  cut_size_height_mm: string;
-  burning_wastage_percent: string;
-  heat_treatment_rate: string;
-  heat_treatment_inefficacy_percent: string;
-}
+export type ProfileRecord = OrderProfilesRecord & {inventory_id?: string};
+
 
 // Profile list metadata structure
 export type ProfilesListMeta = {

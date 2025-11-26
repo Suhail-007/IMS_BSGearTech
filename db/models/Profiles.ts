@@ -6,12 +6,19 @@ interface ProfilesAttributes {
   name: string;
   type:  '0' | '1';
   material: 'CR-5' | 'EN-9';
-  material_rate: number;
-  cut_size_width_mm: number;
-  cut_size_height_mm: number;
-  burning_wastage_percent: number;
-  heat_treatment_rate: number;
-  heat_treatment_inefficacy_percent: number;
+  no_of_teeth: number;
+  rate: number;
+  face: number;
+  module: number;
+  finish_size?: string;
+  burning_weight: number;
+  total_weight: number;
+  ht_cost: number;
+  ht_rate: number;
+  processes?: any;
+  cyn_grinding: number;
+  total: number;
+  inventory_id?: string;
 }
 
 interface ProfilesCreationAttributes extends Optional<ProfilesAttributes, 'id'> {}
@@ -21,12 +28,26 @@ class Profiles extends Model<ProfilesAttributes, ProfilesCreationAttributes> imp
   declare name: string;
   declare type: '0' | '1';
   declare material: 'CR-5' | 'EN-9';
-  declare material_rate: number;
-  declare cut_size_width_mm: number;
-  declare cut_size_height_mm: number;
-  declare burning_wastage_percent: number;
-  declare heat_treatment_rate: number;
-  declare heat_treatment_inefficacy_percent: number;
+  declare no_of_teeth: number;
+  declare rate: number;
+  declare face: number;
+  declare module: number;
+  declare finish_size?: string;
+  declare burning_weight: number;
+  declare total_weight: number;
+  declare ht_cost: number;
+  declare ht_rate: number;
+  declare processes?: any;
+  declare cyn_grinding: number;
+  declare total: number;
+  declare inventory_id?: string;
+
+  static associate(models: any) {
+    Profiles.belongsTo(models.Inventory, {
+      foreignKey: 'inventory_id',
+      as: 'inventory',
+    });
+  }
 }
 
 Profiles.init(
@@ -48,29 +69,73 @@ Profiles.init(
       type: DataTypes.ENUM('CR-5', 'EN-9'),
       allowNull: false,
     },
-    material_rate: {
-      type: DataTypes.DECIMAL(12, 4),
+    no_of_teeth: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      defaultValue: 0,
     },
-    cut_size_width_mm: {
-      type: DataTypes.DECIMAL(10, 4),
+    rate: {
+      type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
+      defaultValue: 0,
     },
-    cut_size_height_mm: {
-      type: DataTypes.DECIMAL(10, 4),
+    face: {
+      type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
+      defaultValue: 0,
     },
-    burning_wastage_percent: {
-      type: DataTypes.DECIMAL(5, 2),
+    module: {
+      type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
+      defaultValue: 0,
     },
-    heat_treatment_rate: {
-      type: DataTypes.DECIMAL(12, 4),
-      allowNull: false,
+    finish_size: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
-    heat_treatment_inefficacy_percent: {
-      type: DataTypes.DECIMAL(5, 2),
+    burning_weight: {
+      type: DataTypes.DECIMAL(14, 2),
       allowNull: false,
+      defaultValue: 0,
+    },
+    total_weight: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    ht_cost: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    ht_rate: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    processes: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
+    cyn_grinding: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    total: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
+    inventory_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'inventory',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
     },
   },
   {

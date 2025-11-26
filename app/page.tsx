@@ -9,7 +9,7 @@ import { RecentBuyers } from '@/components/pages/dashboard/components/recent-buy
 import RecentBuyersSkeleton from '@/components/pages/dashboard/components/recent-buyers-skeleton';
 import { RecentBuyersBoundary } from '@/components/pages/dashboard/components/recent-buyers-boundary';
 import { MaterialsAndProfiles } from '@/components/pages/dashboard/components/materials-and-profiles';
-import { MateraiAndProfilesBoundary } from '../components/pages/dashboard/components/materials-and-profiles-boundary';
+import { MaterialsAndProfilesBoundary } from '../components/pages/dashboard/components/materials-and-profiles-boundary';
 
 // Force dynamic rendering to prevent prerendering during build
 export const dynamic = 'force-dynamic';
@@ -20,9 +20,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
-            Welcome back, Admin
-          </h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome back, Admin</h1>
           <p className="text-muted-foreground">
             Here&apos;s what&apos;s happening with your inventory today
           </p>
@@ -54,9 +52,9 @@ export default function Home() {
         </div>
 
         {/* Materials and Profiles Section */}
-        <MateraiAndProfilesBoundary>
+        <MaterialsAndProfilesBoundary>
           <MaterialsAndProfiles />
-        </MateraiAndProfilesBoundary>
+        </MaterialsAndProfilesBoundary>
       </main>
     </div>
   );

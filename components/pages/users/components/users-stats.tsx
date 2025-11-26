@@ -12,21 +12,21 @@ const statsConfig = [
   {
     title: 'Total Users',
     icon: Users,
-    gradient: 'from-blue-500 to-cyan-500',
+    gradient: 'from-blue-500 to-cyan-500 dark:from-blue-500/30 dark:to-cyan-500/30',
     description: 'All registered accounts',
     key: 'total' as const,
   },
   {
     title: 'Active Users',
     icon: UserCheck,
-    gradient: 'from-green-500 to-emerald-500',
+    gradient: 'from-green-500 to-emerald-500 dark:from-green-500/30 dark:to-emerald-500/30',
     description: 'Currently active accounts',
     key: 'active' as const,
   },
   {
     title: 'Admins',
     icon: ShieldCheck,
-    gradient: 'from-indigo-500 to-blue-600',
+    gradient: 'from-indigo-500 to-blue-600  dark:from-indigo-500/30 dark:to-blue-500/30',
     description: 'Currently active admins',
     key: 'admins' as const,
   },
@@ -36,7 +36,7 @@ export function UsersStats({ total, active, admins, loading }: UsersStatsProps) 
   const values = { total, active, admins }
 
   return (
-    <div className="mb-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {statsConfig.map(({ title, icon: Icon, gradient, description, key }) => (
         <Card key={title} className="overflow-hidden border shadow-sm dark:border-slate-800">
           <div className={`h-1 bg-gradient-to-r ${gradient}`} />

@@ -1,61 +1,25 @@
-import Link from 'next/link'
-import { Package, Layers, Info, Weight, Clock, IndianRupee, Flame } from 'lucide-react'
-import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card'
-import { Badge } from '@/components/ui/badge'
-import { fetchDashboardMaterials, fetchDashboardProfileTypes } from '@/services/dashboard'
-import { cn } from '@/lib/utils'
+import Link from 'next/link';
+import { Package, Layers, IndianRupee, Ruler } from 'lucide-react';
+import { DashboardCard } from '@/components/pages/dashboard/components/dashboard-card';
+import { Badge } from '@/components/ui/badge';
+import { fetchDashboardMaterials, fetchDashboardProfileTypes } from '@/services/dashboard';
 
-const MATERIAL_STATUS: Record<string, { label: string; className: string }> = {
-  'in-stock': {
-    label: 'In Stock',
-    className: 'bg-green-500/10 text-green-700 dark:text-green-500 border-green-500/20',
-  },
-  'low-stock': {
-    label: 'Low Stock',
-    className: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20',
-  },
-  'out-of-stock': {
-    label: 'Out of Stock',
-    className: 'bg-red-500/10 text-red-700 dark:text-red-500 border-red-500/20',
-  },
-}
-
-const PROFILE_BADGE_CLASS = 'bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-500/20'
-
-const quantityFormatter = new Intl.NumberFormat('en-IN', {
-  maximumFractionDigits: 0,
-})
+const PROFILE_BADGE_CLASS = 'bg-blue-500/10 text-blue-700 dark:text-blue-500 border-blue-500/20';
 
 const rateFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
   currency: 'INR',
-  maximumFractionDigits: 0,
-})
-
-function resolveMaterialStatus(status: string) {
-  return MATERIAL_STATUS[status] ?? MATERIAL_STATUS['low-stock']
-}
-
-function calculateStockFill(stock: number) {
-  if (stock <= 0) {
-    return 0
-  }
-
-  // Use a fixed target of 200kg for the progress bar
-  const target = 200
-  const ratio = stock / target
-  return Math.min(Math.round(ratio * 100), 100)
-}
-
+  maximumFractionDigits: 0
+});
 
 export async function MaterialsAndProfiles() {
   const [materialsResponse, profileTypesResponse] = await Promise.all([
     fetchDashboardMaterials({ limit: 4 }),
-    fetchDashboardProfileTypes({ limit: 4 }),
-  ])
+    fetchDashboardProfileTypes({ limit: 4 })
+  ]);
 
-  const materials = materialsResponse.data?.data ?? []
-  const profiles = profileTypesResponse.data?.data ?? []
+  const materials = materialsResponse.data?.data ?? [];
+  const profiles = profileTypesResponse.data?.data ?? [];
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -63,7 +27,7 @@ export async function MaterialsAndProfiles() {
         title="Materials"
         description="Raw material inventory overview"
         icon={Package}
-        gradient="from-green-500 to-emerald-500"
+        gradient="from-green-500 to-emerald-500  dark:from-green-500/30 dark:to-emerald-500/30"
         action={
           <Link
             href="/inventory?tab=materials"
@@ -80,63 +44,41 @@ export async function MaterialsAndProfiles() {
             </div>
           )}
 
-          {materials.map((material) => {
-            const status = resolveMaterialStatus(material.status)
-            const stockFill = calculateStockFill(material.stock)
-
-            return (
-              <div
-                key={material.id}
-                className="rounded-lg border bg-white p-3 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md dark:border-slate-800 dark:bg-slate-800"
-              >
-                <div className="mb-2 flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                      {material.name}
-                    </p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">
-                      {material.type}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Info className="h-3 w-3" />
-                      {material.profileCount} profiles using this material
-                    </p>
-                  </div>
-                  <Badge className={status.className}>{status.label}</Badge>
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                    <Weight className="h-3 w-3" />
-                    In Stock:{' '}
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {quantityFormatter.format(material.stock)} {material.unit}
-                    </span>
-                  </span>
-                  <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    Pending: {quantityFormatter.format(material.pendingDelivery)} {material.unit}
-                  </span>
-                </div>
-
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div
-                    className={cn(
-                      'h-full rounded-full transition-all duration-300',
-                      material.status === 'in-stock' && 'bg-gradient-to-r from-green-500 to-emerald-500',
-                      material.status === 'low-stock' && 'bg-gradient-to-r from-yellow-500 to-orange-500',
-                      material.status === 'out-of-stock' && 'bg-gradient-to-r from-red-500 to-red-600',
-                    )}
-                    style={{ width: `${stockFill}%` }}
-                  />
-                </div>
-
-                <div className="mt-3 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>Available: {quantityFormatter.format(Math.max(0, material.stock - material.pendingDelivery))} {material.unit}</span>
+          {materials.map((material) => (
+            <div
+              key={material.id}
+              className="rounded-lg border bg-white p-3 transition-all duration-200 hover:-translate-y-[1px] hover:shadow-md dark:border-slate-800 dark:bg-slate-800"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    {material.name}
+                  </p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">{material.type}</p>
                 </div>
               </div>
-            )
-          })}
+
+              <div className="mt-2 space-y-1">
+                <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                  <Ruler className="h-3 w-3" />
+                  Dimensions: {material.dimensions}
+                </p>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <IndianRupee className="h-3 w-3" />
+                    Rate: {rateFormatter.format(material.rate)}
+                  </span>
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Weight: {material.weight} {material.unit}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+                  {material.profileCount} {material.profileCount === 1 ? 'profile' : 'profiles'}{' '}
+                  using this material
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </DashboardCard>
 
@@ -144,7 +86,7 @@ export async function MaterialsAndProfiles() {
         title="Profile Types"
         description="Product profiles and gears"
         icon={Layers}
-        gradient="from-orange-500 to-red-500"
+        gradient="from-orange-500 to-red-500  dark:from-orange-500/30 dark:to-red-500/30"
         action={
           <Link
             href="/inventory?tab=profiles"
@@ -171,16 +113,17 @@ export async function MaterialsAndProfiles() {
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {profile.name}
                   </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                    {profile.specification}
+                  <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                    <Ruler className="h-3 w-3" />
+                    Finish Size: {profile.specification}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <Ruler className="h-3 w-3" />
+                    Material:{profile.materialDimensions}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                     <IndianRupee className="h-3 w-3" />
-                    Material Rate: {rateFormatter.format(profile.materialRate)} · HT Rate: {rateFormatter.format(profile.heatTreatmentRate)}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <Flame className="h-3 w-3" />
-                    Wastage: {profile.burningWastagePercent}% · HT Inefficacy: {profile.heatTreatmentInefficacyPercent}%
+                    Total: {rateFormatter.format(profile.total)}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
@@ -197,5 +140,5 @@ export async function MaterialsAndProfiles() {
         </div>
       </DashboardCard>
     </div>
-  )
+  );
 }

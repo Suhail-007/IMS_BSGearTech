@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, MouseEventHandler } from 'react';
+import { useCallback, useEffect, useMemo, useState, } from 'react';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useToast } from '@/hooks/use-toast';
@@ -10,10 +10,10 @@ import type { UserRecord, UsersListMeta } from '@/services/types/users.api.type'
 import { UsersStats } from '@/components/pages/users/components/users-stats';
 import { UsersCardGrid } from '@/components/pages/users/components/users-card-grid';
 import { UserDetailsDialog } from '@/components/pages/users/components/user-details-dialog';
-import { CreateUserDialog } from '@/components/pages/users/components/create-user-dialog';
+// import { UserFormDialog } from '@/components/pages/users/components/user-form-dialog';
 import { PageWrapper } from '@/components/ui/page-wrapper';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, UserCircle } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+import {  UserCircle } from 'lucide-react';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 const USERS_PAGE_SIZE = 10;
@@ -167,10 +167,10 @@ export default function UsersPage() {
     }
   }, [isAuthorized, loadUsers]);
 
-  const handleRefresh: MouseEventHandler<HTMLButtonElement> = (event) => {
-    event.preventDefault();
-    loadUsers({ page: 1, silent: true });
-  };
+  // const handleRefresh: MouseEventHandler<HTMLButtonElement> = (event) => {
+  //   event.preventDefault();
+  //   loadUsers({ page: 1, silent: true });
+  // };
 
   const handleToggleStatus = async (id: string, status: UserRecord['status']) => {
     try {
@@ -345,37 +345,51 @@ export default function UsersPage() {
       title="User Management"
       subtitle="Manage system users and their permissions"
       icon={UserCircle}
-      gradient="blue-cyan"
-      headerActions={
-        <>
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className="h-4 w-4" />
-            {isRefreshing ? 'Refreshing' : 'Refresh'}
-          </Button>
-          <CreateUserDialog onSuccess={() => loadUsers({ page: 1, silent: true })} />
-        </>
-      }
+      // headerActions={
+      //   <>
+      //     <Button
+      //       variant="outline"
+      //       className="gap-2"
+      //       onClick={handleRefresh}
+      //       disabled={isRefreshing}
+      //     >
+      //       <RefreshCw className="h-4 w-4" />
+      //       {isRefreshing ? 'Refreshing' : 'Refresh'}
+      //     </Button>
+      //     {/* <UserFormDialog onSuccess={() => loadUsers({ page: 1, silent: true })} /> */}
+      //   </>
+      // }
     >
-      <UsersStats
-          total={stats.total}
-          active={stats.active}
-          admins={stats.admins}
-          loading={isLoading && users.length === 0}
-        />
-        <UsersCardGrid
-          users={users}
-          meta={meta ?? undefined}
-          isLoading={isLoading && users.length === 0}
-          isLoadingMore={isLoadingMore}
-          currentUserId={currentUser?.id}
-          onCardClick={handleCardClick}
-        onLoadMore={handleLoadMore}
-      />
+      <div className="space-y-8">
+        <section className="rounded-xl bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 p-6 shadow-lg">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Overview</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Quick statistics about your users</p>
+          </div>
+          <UsersStats
+            total={stats.total}
+            active={stats.active}
+            admins={stats.admins}
+            loading={isLoading && users.length === 0}
+          />
+        </section>
+
+        <section className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-lg">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">All Users</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Browse and manage user accounts</p>
+          </div>
+          <UsersCardGrid
+            users={users}
+            meta={meta ?? undefined}
+            isLoading={isLoading && users.length === 0}
+            isLoadingMore={isLoadingMore}
+            currentUserId={currentUser?.id}
+            onCardClick={handleCardClick}
+            onLoadMore={handleLoadMore}
+          />
+        </section>
+      </div>
 
       <UserDetailsDialog
         user={selectedUser}

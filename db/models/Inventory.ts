@@ -5,36 +5,40 @@ export interface InventoryAttributes {
   id: string;
   material_type: 'CR-5' | 'EN-9';
   material_weight: number;
-  cut_size_width: number;
-  cut_size_height: number;
-  po_number?: string;
+  outer_diameter: number;
+  length: number;
+  rate: number;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface InventoryCreationAttributes
-  extends Optional<InventoryAttributes, 'id' | 'po_number' | 'created_at' | 'updated_at'> {}
+  extends Optional<InventoryAttributes, 'id' | 'created_at' | 'updated_at'> {}
 
 class Inventory extends Model<InventoryAttributes, InventoryCreationAttributes> implements InventoryAttributes {
-  public id!: string;
-  public material_type!: 'CR-5' | 'EN-9';
-  public material_weight!: number;
-  public cut_size_width!: number;
-  public cut_size_height!: number;
-  public po_number?: string;
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare id: string;
+  declare material_type: 'CR-5' | 'EN-9';
+  declare material_weight: number;
+  declare outer_diameter: number;
+  declare length: number;
+  declare rate: number;
+  declare readonly created_at: Date;
+  declare readonly updated_at: Date;
 
   static associate(models: any): void {
     Inventory.hasMany(models.OrderInventory, {
       foreignKey: 'inventory_id',
       as: 'orderInventories',
     });
+    Inventory.hasMany(models.Profiles, {
+      foreignKey: 'inventory_id',
+      as: 'profiles',
+    });
   }
 
   // Timestamps
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 Inventory.init(
@@ -53,22 +57,23 @@ Inventory.init(
     material_weight: {
       type: DataTypes.DECIMAL(10, 3),
       allowNull: false,
-      comment: 'Weight of material in kg'
+      comment: 'For BE wastage calculation only'
     },
-    cut_size_width: {
+    outer_diameter: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
-      comment: 'Width dimension in mm'
+      comment: 'Outer diameter in mm'
     },
-    cut_size_height: {
+    length: {
       type: DataTypes.DECIMAL(10, 4),
       allowNull: false,
-      comment: 'Height dimension in mm'
+      comment: 'Length in mm'
     },
-    po_number: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      comment: 'Related Purchase Order number'
+    rate: {
+      type: DataTypes.DECIMAL(14, 2),
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Rate per unit'
     },
     created_at: {
       type: DataTypes.DATE,
